@@ -1,0 +1,27 @@
+{
+  "name": "@sphinxkatze/dbutils",
+  "version": "0.0.0",
+  "description": "A library for an universal database api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sphinxkatze/dbutils.git"
+  },
+  "keywords": [
+    "database",
+    "api",
+    "universal"
+  ],
+  "author": "SphinxKatze <sphinxkatze@proton.me>",
+  "license": "LGPL-2.1-only",
+  "bugs": {
+    "url": "https://github.com/Sphinxkatze/dbutils/issues"
+  },
+  "homepage": "https://github.com/Sphinxkatze/dbutils#readme",
+  "dependencies": {
+    "mongodb": "^6.16.0"
+  }
+}
