@@ -80,7 +80,7 @@ function createTTL_Index(database){
     const indexes = sub_database.getIndexes();
     for (index of indexes){
         if (index.name = '_ttlIDX')
-            break;
+            return;
     }
 
     sub_database.createIndex({ "expiresAt": 1 },
