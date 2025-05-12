@@ -100,27 +100,28 @@ async function remove_TTL(){
         return;
 
     const removeCandidates = [], running = false;
-    const removing_Agent = async function(cache){
+    const removing_Agent = async function(){
         if (running)
             return;
 
         running = true;
         for (idx=0; idx < removeCandidates.length; idx++){
-            const path = removeCandidates[idx];
+            const { path, application } = removeCandidates[idx];
+            const cache_ = updateCache(application, true), cache = cache_[application];
 
             for (objIdx_ of cache){
                 if (path === objIdx_._id)
                     cache[idx] = undefined;
             }
             removeCandidates[idx] = undefined;
+            try {
+                fs.writeFileSync(dbPath, JSON.stringify(cache_));
+                // file written successfully
+            } catch (err) {
+                console.error("Updating devCache throws Error: ", err);
+            }
         }
 
-        try {
-            fs.writeFileSync(dbPath, JSON.stringify(cache));
-            // file written successfully
-        } catch (err) {
-            console.error("Updating devCache throws Error: ", err);
-        }
 
         removeCandidates = removeCandidates.filter((obj)=> obj);
         running = false;
@@ -128,12 +129,10 @@ async function remove_TTL(){
 
     while(ttlIdx.length > 0){
         for (objIdx of ttlIdx){
-            const cache = updateCache(objIdx.application);
-
             if (objIdx.time < new Date()){
-                removeCandidates.push(objIdx.path);
+                removeCandidates.push({objIdx.path, objIdx.application});
 
-                removing_Agent(cache);
+                removing_Agent();
             }
         }
 
