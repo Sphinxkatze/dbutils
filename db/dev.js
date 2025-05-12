@@ -149,10 +149,8 @@ async function newEntry(location, key, value, options){
     const cache = updateCache();
 
     let sub_database = cache[location[0]];
-    if (!sub_database){
-        cache[location[0]] = [];
-        sub_database = cache[location[0]];
-    }
+    if (!sub_database)
+        sub_database = [];
 
     let hit;
     for (obj of sub_database){
