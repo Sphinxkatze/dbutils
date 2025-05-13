@@ -113,7 +113,15 @@ async function newEntry(location, key, value, options){
     }
 
     const result = await sub_database.updateOne(query, content, (!location[3])? {upsert: true} : {});
-    console.log(result);
+    const found = result.matchedCount > 0, success = found && (result.modifiedCount > 0 || result.upsertedCount > 0);
+
+    return {
+        found,
+        success,
+
+        error: (!success && found && location[3])? 'NoUpsertError: Trying to update value, but value didn\'t already exist!' : '',
+        createdNew: result.upsertedCount > 0
+    };
 }
 
 async function custom(instruction){

@@ -152,11 +152,12 @@ async function newEntry(location, key, value, options){
     if (!sub_database)
         sub_database = [];
 
-    let hit;
+    let hit, found = false, success = true, createdNew = false, error;
     for (obj of sub_database){
         if (obj[location[1]] && (!location[2] || location[2] === '*' ||
                 obj[location[1]] === location[2])){
             hit = obj;
+            found = true;
             break;
         }
 
@@ -164,14 +165,17 @@ async function newEntry(location, key, value, options){
 
     if (!hit){
         //forceExisting
-        if (location[3])
-            return {error: "Error while trying to write, because couldn't find existing data"};
+        if (location[3]){
+            success = false;
+            error = "NoUpsertError: Trying to update value, but value didn\'t already exist!";
 
+        } else {
+            const new_hit = {_id: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)};
+            sub_database.push(new_hit);
 
-        const new_hit = {_id: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)};
-        sub_database.push(new_hit);
-
-        hit = new_hit;
+            createdNew = true;
+            hit = new_hit;
+        }
     }
 
     if (options?.expiration?.enabled){
@@ -182,7 +186,8 @@ async function newEntry(location, key, value, options){
         remove_TTL();
     }
 
-    hit[key] = value;
+    if (success)
+        hit[key] = value;
 
     try {
         const cache_new = updateCache(application, true);
@@ -192,7 +197,17 @@ async function newEntry(location, key, value, options){
         // file written successfully
     } catch (err) {
         console.error("Updating devCache throws Error: ", err);
+        error = "Updating devCache throws Error: " + err;
+        success = false;
     }
+
+    return {
+        found,
+        success,
+
+        error,
+        createdNew
+    };
 }
 
 async function custom(instruction){

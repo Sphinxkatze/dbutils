@@ -76,6 +76,14 @@ Option valid properties are currently:
 - expiration.enabled: Which enables the TTL based removal of documents.
 expiration.hours & expiration.min can be used to define the time from now until the event
 
+<br>
+Returns:
+
+- found - whether it found any matching data
+- success - whether it was successful
+- error - message containing the error
+- createdNew - whether a new pair was created
+
 >Notice: you can only write to objects, once an object was selected using 'access()' above.
 
 #### read(obj, key)
