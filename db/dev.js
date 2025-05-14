@@ -130,7 +130,7 @@ async function remove_TTL(){
     while(ttlIdx.length > 0){
         for (objIdx of ttlIdx){
             if (objIdx.time < new Date()){
-                removeCandidates.push({objIdx.path, objIdx.application});
+                removeCandidates.push({path: objIdx.path, application: objIdx.application});
 
                 removing_Agent();
             }
