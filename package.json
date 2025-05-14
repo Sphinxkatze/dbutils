@@ -1,6 +1,6 @@
 {
   "name": "@sphinxkatze/dbutils",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A library for an universal database api",
   "main": "index.js",
   "scripts": {
