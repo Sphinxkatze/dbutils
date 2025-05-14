@@ -80,7 +80,7 @@ function createTTL_Index(database){
     const indexes = sub_database.getIndexes();
     for (index of indexes){
         if (index.name = '_ttlIDX')
-            break;
+            return;
     }
 
     sub_database.createIndex({ "expiresAt": 1 },
@@ -113,11 +113,19 @@ async function newEntry(location, key, value, options){
     }
 
     const result = await sub_database.updateOne(query, content, (!location[3])? {upsert: true} : {});
-    console.log(result);
+    const found = result.matchedCount > 0, success = found && (result.modifiedCount > 0 || result.upsertedCount > 0);
+
+    return {
+        found,
+        success,
+
+        error: (!success && found && location[3])? 'NoUpsertError: Trying to update value, but value didn\'t already exist!' : '',
+        createdNew: result.upsertedCount > 0
+    };
 }
 
 async function custom(instruction){
-    return await client.db(application).command(instruction);
+    return {obj: client, value: await client.db(application).command(instruction)};
 }
 
 async function close(){

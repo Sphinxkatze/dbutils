@@ -100,27 +100,28 @@ async function remove_TTL(){
         return;
 
     const removeCandidates = [], running = false;
-    const removing_Agent = async function(cache){
+    const removing_Agent = async function(){
         if (running)
             return;
 
         running = true;
         for (idx=0; idx < removeCandidates.length; idx++){
-            const path = removeCandidates[idx];
+            const { path, application } = removeCandidates[idx];
+            const cache_ = updateCache(application, true), cache = cache_[application];
 
             for (objIdx_ of cache){
                 if (path === objIdx_._id)
                     cache[idx] = undefined;
             }
             removeCandidates[idx] = undefined;
+            try {
+                fs.writeFileSync(dbPath, JSON.stringify(cache_));
+                // file written successfully
+            } catch (err) {
+                console.error("Updating devCache throws Error: ", err);
+            }
         }
 
-        try {
-            fs.writeFileSync(dbPath, JSON.stringify(cache));
-            // file written successfully
-        } catch (err) {
-            console.error("Updating devCache throws Error: ", err);
-        }
 
         removeCandidates = removeCandidates.filter((obj)=> obj);
         running = false;
@@ -128,12 +129,10 @@ async function remove_TTL(){
 
     while(ttlIdx.length > 0){
         for (objIdx of ttlIdx){
-            const cache = updateCache(objIdx.application);
-
             if (objIdx.time < new Date()){
-                removeCandidates.push(objIdx.path);
+                removeCandidates.push({path: objIdx.path, application: objIdx.application});
 
-                removing_Agent(cache);
+                removing_Agent();
             }
         }
 
@@ -150,16 +149,15 @@ async function newEntry(location, key, value, options){
     const cache = updateCache();
 
     let sub_database = cache[location[0]];
-    if (!sub_database){
-        cache[location[0]] = [];
-        sub_database = cache[location[0]];
-    }
+    if (!sub_database)
+        sub_database = [];
 
-    let hit;
+    let hit, found = false, success = true, createdNew = false, error;
     for (obj of sub_database){
         if (obj[location[1]] && (!location[2] || location[2] === '*' ||
                 obj[location[1]] === location[2])){
             hit = obj;
+            found = true;
             break;
         }
 
@@ -167,14 +165,17 @@ async function newEntry(location, key, value, options){
 
     if (!hit){
         //forceExisting
-        if (location[3])
-            return {error: "Error while trying to write, because couldn't find existing data"};
+        if (location[3]){
+            success = false;
+            error = "NoUpsertError: Trying to update value, but value didn\'t already exist!";
 
+        } else {
+            const new_hit = {_id: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)};
+            sub_database.push(new_hit);
 
-        const new_hit = {_id: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)};
-        sub_database.push(new_hit);
-
-        hit = new_hit;
+            createdNew = true;
+            hit = new_hit;
+        }
     }
 
     if (options?.expiration?.enabled){
@@ -185,7 +186,8 @@ async function newEntry(location, key, value, options){
         remove_TTL();
     }
 
-    hit[key] = value;
+    if (success)
+        hit[key] = value;
 
     try {
         const cache_new = updateCache(application, true);
@@ -195,11 +197,21 @@ async function newEntry(location, key, value, options){
         // file written successfully
     } catch (err) {
         console.error("Updating devCache throws Error: ", err);
+        error = "Updating devCache throws Error: " + err;
+        success = false;
     }
+
+    return {
+        found,
+        success,
+
+        error,
+        createdNew
+    };
 }
 
 async function custom(instruction){
-    return {error: 'Unsupported Method'};
+    return {obj: updateCache(undefined, true), error: 'Unsupported Method'};
 }
 
 async function close(){
