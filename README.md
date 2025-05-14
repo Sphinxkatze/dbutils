@@ -110,6 +110,13 @@ to be executed; can be unsupported.
 
 Unsupported databases will throw an error object.
 
+<br>
+Returns:
+
+- obj - internal obj for full control
+- value - returned value after instruction completion
+- error - if database does not support it
+
 #### close()
 
 This method is used to disconnect from the current database;

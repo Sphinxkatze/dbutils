@@ -211,7 +211,7 @@ async function newEntry(location, key, value, options){
 }
 
 async function custom(instruction){
-    return {error: 'Unsupported Method'};
+    return {obj: updateCache(undefined, true), error: 'Unsupported Method'};
 }
 
 async function close(){

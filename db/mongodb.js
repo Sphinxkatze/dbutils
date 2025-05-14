@@ -125,7 +125,7 @@ async function newEntry(location, key, value, options){
 }
 
 async function custom(instruction){
-    return await client.db(application).command(instruction);
+    return {obj: client, value: await client.db(application).command(instruction)};
 }
 
 async function close(){
